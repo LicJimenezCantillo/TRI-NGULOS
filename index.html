@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TriangleMaster – Aventura Geométrica</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d2b;
+    --bg2: #12123a;
+    --card: #1a1a4e;
+    --card2: #1f1f5e;
+    --accent1: #f7c948;
+    --accent2: #ff6b6b;
+    --accent3: #4ecdc4;
+    --accent4: #a78bfa;
+    --green: #6ee7b7;
+    --white: #f0f0ff;
+    --gray: #8888bb;
+    --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    --radius: 18px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* STARS BG */
+  .stars {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(78,205,196,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(167,139,250,0.07) 0%, transparent 60%);
+  }
+  .stars::before, .stars::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 75%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 55% 30%, rgba(255,255,255,0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(2px 2px at 85% 10%, rgba(255,255,255,0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 45% 60%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 15% 90%, rgba(255,255,255,0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 45%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 62% 5%, rgba(255,255,255,0.7) 0%, transparent 100%),
+      radial-gradient(2px 2px at 5% 55%, rgba(255,255,255,0.4) 0%, transparent 100%);
+  }
+
+  .screen { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+  .hidden { display: none !important; }
+
+  /* ===== WELCOME ===== */
+  .welcome-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    text-align: center;
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--accent1), var(--accent3), var(--accent4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(247,201,72,0.3));
+    animation: titlePulse 3s ease-in-out infinite;
+  }
+  @keyframes titlePulse {
+    0%, 100% { filter: drop-shadow(0 0 20px rgba(247,201,72,0.3)); }
+    50% { filter: drop-shadow(0 0 40px rgba(78,205,196,0.5)); }
+  }
+
+  .tri-deco {
+    display: flex; justify-content: center; gap: 16px; margin: 24px 0;
+    animation: floatTri 4s ease-in-out infinite;
+  }
+  @keyframes floatTri {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .tri-deco svg { width: 48px; height: 48px; }
+
+  .subtitle {
+    font-size: 1.1rem; color: var(--gray); text-align: center; margin-bottom: 8px;
+  }
+  .teacher-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--accent4), var(--accent3));
+    padding: 8px 20px; border-radius: 50px;
+    font-weight: 700; font-size: 0.95rem; margin-bottom: 32px;
+    box-shadow: 0 4px 20px rgba(167,139,250,0.4);
+  }
+
+  .input-group { width: 100%; max-width: 420px; margin-bottom: 24px; }
+  .input-group label { display: block; font-weight: 700; margin-bottom: 8px; color: var(--accent1); font-size: 1rem; }
+  .input-group input {
+    width: 100%; padding: 14px 20px;
+    background: var(--card2); border: 2px solid rgba(167,139,250,0.3);
+    border-radius: var(--radius); font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem; color: var(--white); outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .input-group input:focus {
+    border-color: var(--accent3);
+    box-shadow: 0 0 0 4px rgba(78,205,196,0.15);
+  }
+  .input-group input::placeholder { color: var(--gray); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 14px 36px; border: none; border-radius: 50px;
+    font-family: 'Fredoka One', cursive; font-size: 1.2rem;
+    cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.5px;
+  }
+  .btn:hover { transform: translateY(-3px); }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent1), #f9a825);
+    color: #1a1a00;
+    box-shadow: 0 6px 24px rgba(247,201,72,0.4);
+  }
+  .btn-primary:hover { box-shadow: 0 10px 32px rgba(247,201,72,0.6); }
+  .btn-secondary {
+    background: linear-gradient(135deg, var(--accent3), #00897b);
+    color: #001a18;
+    box-shadow: 0 6px 24px rgba(78,205,196,0.4);
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, var(--accent2), #c62828);
+    color: white;
+    box-shadow: 0 6px 24px rgba(255,107,107,0.4);
+  }
+  .btn-purple {
+    background: linear-gradient(135deg, var(--accent4), #7c3aed);
+    color: white;
+    box-shadow: 0 6px 24px rgba(167,139,250,0.4);
+  }
+
+  /* ===== WORLD MAP ===== */
+  .world-map {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 20px; width: 100%; max-width: 700px; padding: 20px;
+  }
+  .map-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem; text-align: center;
+    color: var(--accent1);
+  }
+  .player-info {
+    background: var(--card); border-radius: var(--radius);
+    padding: 14px 28px; text-align: center;
+    border: 1px solid rgba(167,139,250,0.2);
+    font-weight: 700; font-size: 1.1rem;
+  }
+  .player-info span { color: var(--accent3); }
+
+  .worlds-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 20px; width: 100%;
+  }
+  .world-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 24px; text-align: center; cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .world-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--world-color, rgba(247,201,72,0.05));
+    transition: opacity 0.3s;
+  }
+  .world-card:hover { transform: translateY(-6px); }
+  .world-card.unlocked:hover {
+    box-shadow: 0 12px 40px var(--world-shadow, rgba(247,201,72,0.3));
+    border-color: var(--world-border, rgba(247,201,72,0.5));
+  }
+  .world-card.locked { opacity: 0.4; cursor: not-allowed; }
+  .world-card.completed { border-color: var(--green); }
+  .world-card.completed::after {
+    content: '✓'; position: absolute; top: 10px; right: 14px;
+    font-size: 1.4rem; color: var(--green); font-weight: 900;
+  }
+  .world-icon { font-size: 3rem; margin-bottom: 12px; display: block; }
+  .world-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 0.85rem; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 4px;
+    opacity: 0.7;
+  }
+  .world-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem; margin-bottom: 8px;
+  }
+  .world-desc { font-size: 0.8rem; color: var(--gray); line-height: 1.4; }
+  .world-stars { margin-top: 10px; font-size: 1.1rem; }
+  .lock-icon { font-size: 2.5rem; margin-bottom: 8px; display: block; }
+
+  /* ===== GAME SCREEN ===== */
+  .game-container { width: 100%; max-width: 680px; }
+
+  .game-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .world-badge {
+    background: var(--world-color-solid, var(--accent1));
+    color: #111; padding: 6px 16px; border-radius: 50px;
+    font-family: 'Fredoka One', cursive; font-size: 0.95rem;
+  }
+  .question-counter {
+    font-weight: 700; font-size: 0.95rem; color: var(--gray);
+  }
+  .score-display {
+    margin-left: auto; background: var(--card);
+    padding: 6px 16px; border-radius: 50px;
+    font-weight: 700; font-size: 0.95rem;
+    border: 1px solid rgba(110,231,183,0.3);
+    color: var(--green);
+  }
+
+  .lives-bar {
+    display: flex; gap: 8px; margin-bottom: 16px; align-items: center;
+  }
+  .lives-label { font-size: 0.9rem; color: var(--gray); font-weight: 700; margin-right: 4px; }
+  .heart { font-size: 1.4rem; transition: all 0.3s; }
+  .heart.lost { opacity: 0.2; filter: grayscale(1); transform: scale(0.8); }
+
+  /* TIMER */
+  .timer-wrap {
+    width: 100%; height: 10px; background: rgba(255,255,255,0.08);
+    border-radius: 999px; margin-bottom: 20px; overflow: hidden;
+  }
+  .timer-bar {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent3), var(--accent1));
+    transition: width 1s linear, background 1s;
+    width: 100%;
+  }
+  .timer-bar.warning { background: linear-gradient(90deg, var(--accent2), var(--accent1)); }
+  .timer-text {
+    text-align: right; font-size: 0.85rem; font-weight: 700;
+    color: var(--gray); margin-bottom: 4px;
+  }
+  .timer-text.warning { color: var(--accent2); }
+
+  .question-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 28px; margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.07);
+    box-shadow: var(--shadow);
+    animation: slideIn 0.4s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .question-text {
+    font-size: 1.15rem; font-weight: 700; line-height: 1.5;
+    margin-bottom: 24px; color: var(--white);
+  }
+  .question-svg {
+    display: flex; justify-content: center; margin-bottom: 16px;
+  }
+
+  .options-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .option-btn {
+    background: var(--card2); border: 2px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 14px 16px;
+    font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+    color: var(--white); cursor: pointer;
+    transition: all 0.2s; text-align: left; line-height: 1.3;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent4);
+    background: rgba(167,139,250,0.1);
+    transform: translateX(4px);
+  }
+  .option-btn.correct {
+    background: rgba(110,231,183,0.15);
+    border-color: var(--green);
+    color: var(--green);
+  }
+  .option-btn.wrong {
+    background: rgba(255,107,107,0.15);
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+  .option-btn:disabled { cursor: not-allowed; }
+
+  /* FEEDBACK */
+  .feedback-msg {
+    text-align: center; font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem; padding: 14px; border-radius: var(--radius);
+    margin-bottom: 16px; animation: popIn 0.3s ease-out;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .feedback-msg.correct-fb {
+    background: rgba(110,231,183,0.15);
+    color: var(--green); border: 1px solid var(--green);
+  }
+  .feedback-msg.wrong-fb {
+    background: rgba(255,107,107,0.15);
+    color: var(--accent2); border: 1px solid var(--accent2);
+  }
+  .explanation {
+    font-size: 0.95rem; color: var(--gray);
+    text-align: center; margin-bottom: 16px; line-height: 1.5;
+  }
+
+  /* GAME OVER */
+  .gameover-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 40px; text-align: center; max-width: 480px;
+    border: 2px solid var(--accent2);
+    box-shadow: 0 0 60px rgba(255,107,107,0.2);
+    animation: popIn 0.4s ease-out;
+  }
+  .gameover-icon { font-size: 5rem; margin-bottom: 16px; }
+  .gameover-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem; color: var(--accent2); margin-bottom: 12px;
+  }
+  .gameover-text { color: var(--gray); margin-bottom: 24px; line-height: 1.6; }
+
+  /* WORLD COMPLETE */
+  .world-complete-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 40px; text-align: center; max-width: 500px;
+    animation: popIn 0.4s ease-out;
+  }
+  .wc-icon { font-size: 5rem; margin-bottom: 16px;
+    animation: bounce 0.8s ease-in-out infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .wc-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem; margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent1), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .wc-stats {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin: 20px 0;
+  }
+  .stat-box {
+    background: var(--card2); border-radius: 14px; padding: 16px;
+  }
+  .stat-num {
+    font-family: 'Fredoka One', cursive; font-size: 2rem;
+    display: block;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--gray); }
+
+  /* FINAL */
+  .final-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 40px 32px; text-align: center; max-width: 600px;
+    border: 2px solid var(--accent1);
+    box-shadow: 0 0 80px rgba(247,201,72,0.2);
+    animation: popIn 0.5s ease-out;
+  }
+  .trophy { font-size: 6rem; animation: bounce 1s ease-in-out infinite alternate; }
+  .final-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.5rem; margin: 12px 0;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3), var(--accent4));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .final-name { font-size: 1.2rem; margin-bottom: 8px; }
+  .final-teacher { font-size: 0.9rem; color: var(--gray); margin-bottom: 24px; }
+  .progress-ring-wrap { display: flex; justify-content: center; margin: 24px 0; position: relative; }
+  .progress-ring-wrap .ring-label {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .ring-pct {
+    font-family: 'Fredoka One', cursive; font-size: 2.2rem; display: block;
+    color: var(--accent1);
+  }
+  .ring-sub { font-size: 0.8rem; color: var(--gray); }
+  .final-stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;
+  }
+  .fstat { background: var(--card2); border-radius: 12px; padding: 12px 8px; }
+  .fstat-num { font-family: 'Fredoka One', cursive; font-size: 1.5rem; display: block; }
+  .fstat-lbl { font-size: 0.75rem; color: var(--gray); }
+  .rank-badge {
+    display: inline-block; padding: 10px 28px; border-radius: 50px;
+    font-family: 'Fredoka One', cursive; font-size: 1.2rem; margin: 16px 0;
+  }
+  .certificate-note {
+    font-size: 0.85rem; color: var(--gray); border-top: 1px solid rgba(255,255,255,0.07);
+    padding-top: 16px; margin-top: 16px;
+  }
+
+  /* CONFETTI */
+  .confetti-container {
+    position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute; width: 10px; height: 10px;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* PROGRESS BAR bottom */
+  .world-progress {
+    display: flex; gap: 6px; justify-content: center; margin-top: 20px;
+  }
+  .wp-dot {
+    width: 28px; height: 8px; border-radius: 4px;
+    background: rgba(255,255,255,0.12); transition: background 0.4s;
+  }
+  .wp-dot.done { background: var(--green); }
+  .wp-dot.active { background: var(--accent1); animation: wpPulse 1s ease-in-out infinite; }
+  @keyframes wpPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  @media (max-width: 520px) {
+    .worlds-grid { grid-template-columns: 1fr; }
+    .options-grid { grid-template-columns: 1fr; }
+    .final-stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .wc-stats { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div id="confetti-container" class="confetti-container"></div>
+
+<!-- WELCOME -->
+<div id="screen-welcome" class="screen">
+  <div class="tri-deco">
+    <svg viewBox="0 0 60 60"><polygon points="30,5 55,50 5,50" fill="#f7c948" opacity="0.9"/></svg>
+    <svg viewBox="0 0 60 60"><polygon points="30,5 55,50 5,50" fill="#4ecdc4" opacity="0.9"/></svg>
+    <svg viewBox="0 0 60 60"><polygon points="30,5 55,50 5,50" fill="#a78bfa" opacity="0.9"/></svg>
+  </div>
+  <h1 class="welcome-title">Triangle<br>Master</h1>
+  <p class="subtitle">La gran aventura de los triángulos 🎮</p>
+  <div class="teacher-badge">👨‍🏫 Prof. Andrés Jiménez · Lic. Matemáticas</div>
+  <div class="input-group">
+    <label for="player-name">¿Cuál es tu nombre?</label>
+    <input type="text" id="player-name" placeholder="Escribe tu nombre aquí..." maxlength="30" autocomplete="off">
+  </div>
+  <button class="btn btn-primary" onclick="startGame()">¡Comenzar Aventura! 🚀</button>
+  <div class="world-progress" style="margin-top:32px;">
+    <div class="wp-dot"></div><div class="wp-dot"></div><div class="wp-dot"></div><div class="wp-dot"></div>
+    <span style="color:var(--gray);font-size:0.8rem;margin-left:8px;">4 Mundos por explorar</span>
+  </div>
+</div>
+
+<!-- WORLD MAP -->
+<div id="screen-map" class="screen hidden">
+  <div class="world-map">
+    <div class="map-title">🗺️ Mapa de Mundos</div>
+    <div class="player-info">🎮 Jugador: <span id="map-player-name">—</span> &nbsp;|&nbsp; ⭐ Puntaje total: <span id="map-total-score">0</span></div>
+    <div class="worlds-grid" id="worlds-grid"></div>
+    <div class="world-progress" id="map-progress"></div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen hidden">
+  <div class="game-container">
+    <div class="game-header">
+      <div class="world-badge" id="game-world-badge">Mundo 1</div>
+      <div class="question-counter" id="game-q-counter">Pregunta 1/8</div>
+      <div class="score-display">⭐ <span id="game-score">0</span></div>
+    </div>
+    <div class="lives-bar" id="lives-bar"></div>
+    <div class="timer-text" id="timer-text">⏱ 60s</div>
+    <div class="timer-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+    <div id="feedback-area"></div>
+    <div class="question-card" id="question-card">
+      <div class="question-svg" id="question-svg"></div>
+      <div class="question-text" id="question-text"></div>
+      <div class="options-grid" id="options-grid"></div>
+    </div>
+    <div id="next-btn-area" style="text-align:center;"></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="screen-gameover" class="screen hidden">
+  <div class="gameover-card">
+    <div class="gameover-icon">💔</div>
+    <div class="gameover-title">¡Sin Vidas!</div>
+    <p class="gameover-text" id="gameover-text">Perdiste todas tus vidas en este mundo.<br>¡Vuelve a intentarlo, tú puedes!</p>
+    <button class="btn btn-danger" onclick="retryWorld()">🔄 Reintentar Mundo</button>
+  </div>
+</div>
+
+<!-- WORLD COMPLETE -->
+<div id="screen-world-complete" class="screen hidden">
+  <div class="world-complete-card">
+    <div class="wc-icon" id="wc-icon">🎉</div>
+    <div class="wc-title" id="wc-title">¡Mundo Completado!</div>
+    <p id="wc-msg" style="color:var(--gray);margin-bottom:8px;line-height:1.5;"></p>
+    <div class="wc-stats">
+      <div class="stat-box">
+        <span class="stat-num" style="color:var(--green)" id="wc-correct">0</span>
+        <span class="stat-label">Correctas</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num" style="color:var(--accent2)" id="wc-wrong">0</span>
+        <span class="stat-label">Incorrectas</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num" style="color:var(--accent1)" id="wc-score">0</span>
+        <span class="stat-label">Puntos</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num" style="color:var(--accent4)" id="wc-pct">0%</span>
+        <span class="stat-label">Precisión</span>
+      </div>
+    </div>
+    <div style="margin-top:8px;" id="wc-stars"></div>
+    <button class="btn btn-primary" id="wc-next-btn" onclick="goToMap()" style="margin-top:20px;">Continuar 🗺️</button>
+  </div>
+</div>
+
+<!-- FINAL -->
+<div id="screen-final" class="screen hidden">
+  <div class="final-card">
+    <div class="trophy">🏆</div>
+    <div class="final-title">¡Felicitaciones!</div>
+    <div class="final-name">🎓 <strong id="final-name">Jugador</strong></div>
+    <div class="final-teacher">Expedido por el Prof. Andrés Jiménez · Licenciatura en Matemáticas</div>
+    <div class="progress-ring-wrap">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="10"/>
+        <circle id="ring-circle" cx="70" cy="70" r="58" fill="none" stroke="url(#ringGrad)" stroke-width="10"
+          stroke-linecap="round" stroke-dasharray="364" stroke-dashoffset="364"
+          transform="rotate(-90 70 70)" style="transition: stroke-dashoffset 1.5s ease-out;"/>
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f7c948"/>
+            <stop offset="100%" stop-color="#4ecdc4"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="ring-label">
+        <span class="ring-pct" id="ring-pct">0%</span>
+        <span class="ring-sub">Aciertos</span>
+      </div>
+    </div>
+    <div class="final-stats-grid" id="final-stats"></div>
+    <div class="rank-badge" id="rank-badge"></div>
+    <p class="certificate-note" id="cert-msg"></p>
+    <div style="margin-top:20px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="restartGame()">🔄 Jugar de Nuevo</button>
+      <button class="btn btn-secondary" onclick="printCert()">🖨️ Imprimir Certificado</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== QUESTION BANK ====================
+const WORLDS = [
+  {
+    id: 1, name: "Conceptos Básicos", icon: "📐",
+    desc: "Lados, ángulos, propiedades fundamentales",
+    color: "rgba(247,201,72,0.08)", shadow: "rgba(247,201,72,0.3)",
+    border: "rgba(247,201,72,0.5)", solid: "#f7c948",
+    questions: shuffle([
+      {
+        q: "¿Cuántos lados tiene un triángulo?",
+        opts: ["2 lados", "3 lados", "4 lados", "5 lados"],
+        ans: 1, exp: "Un triángulo tiene exactamente 3 lados y 3 vértices."
+      },
+      {
+        q: "¿Cuánto suman los ángulos interiores de todo triángulo?",
+        opts: ["90°", "180°", "270°", "360°"],
+        ans: 1, exp: "La suma de los ángulos interiores de cualquier triángulo siempre es 180°."
+      },
+      {
+        q: "En un triángulo, dos ángulos miden 60° y 70°. ¿Cuánto mide el tercer ángulo?",
+        opts: ["40°", "50°", "60°", "70°"],
+        ans: 1, exp: "180° − 60° − 70° = 50°. La suma debe dar 180°."
+      },
+      {
+        q: "¿Cuántos ángulos tiene un triángulo?",
+        opts: ["2 ángulos", "3 ángulos", "4 ángulos", "6 ángulos"],
+        ans: 1, exp: "Un triángulo siempre tiene 3 ángulos interiores."
+      },
+      {
+        q: "Si un triángulo tiene ángulos de 90° y 45°, ¿cuánto mide el tercero?",
+        opts: ["30°", "45°", "60°", "90°"],
+        ans: 1, exp: "180° − 90° − 45° = 45°. ¡Es un triángulo isósceles rectángulo!"
+      },
+      {
+        q: "¿Cuál es la condición para que tres segmentos formen un triángulo? (Desigualdad triangular)",
+        opts: [
+          "La suma de dos lados debe ser igual al tercero",
+          "La suma de dos lados debe ser mayor al tercero",
+          "Los tres lados deben medir lo mismo",
+          "Un lado debe ser el doble del otro"
+        ],
+        ans: 1, exp: "Desigualdad triangular: la suma de cualquier par de lados debe ser mayor al lado restante."
+      },
+      {
+        q: "Lados de 3 cm, 4 cm y 5 cm, ¿forman un triángulo?",
+        opts: [
+          "No, porque ningún lado es igual",
+          "Sí, porque 3+4 > 5, 3+5 > 4 y 4+5 > 3",
+          "No, porque la suma de todos no es 180",
+          "Sí, solo si hay un ángulo de 90°"
+        ],
+        ans: 1, exp: "3+4=7>5 ✓, 3+5=8>4 ✓, 4+5=9>3 ✓. ¡Se cumple la desigualdad triangular!"
+      },
+      {
+        q: "¿Forman un triángulo lados de 1 cm, 2 cm y 10 cm?",
+        opts: [
+          "Sí, siempre que sean 3 lados",
+          "No, porque 1+2 = 3 no es mayor que 10",
+          "Sí, si el ángulo es recto",
+          "No se puede saber sin más datos"
+        ],
+        ans: 1, exp: "1+2=3, que NO es mayor que 10. ¡No cumple la desigualdad triangular!"
+      },
+      {
+        q: "En un triángulo un ángulo mide 110° y otro 30°. ¿Cuánto mide el tercero?",
+        opts: ["20°", "30°", "40°", "50°"],
+        ans: 2, exp: "180° − 110° − 30° = 40°. Recuerda: siempre suman 180°."
+      },
+      {
+        q: "¿Puede existir un triángulo con ángulos de 100°, 90° y 10°?",
+        opts: [
+          "Sí, porque hay un ángulo de 90°",
+          "No, porque suman 200°, no 180°",
+          "Sí, cualquier tres ángulos forman uno",
+          "Solo si los lados son muy grandes"
+        ],
+        ans: 1, exp: "100°+90°+10° = 200° ≠ 180°. ¡No es posible! Los ángulos deben sumar exactamente 180°."
+      },
+      {
+        q: "¿Cuántos vértices tiene un triángulo?",
+        opts: ["2", "3", "4", "6"],
+        ans: 1, exp: "Un triángulo tiene 3 vértices, que son los puntos donde se unen los lados."
+      },
+      {
+        q: "¿Qué ocurre si en un triángulo un ángulo mide 180°?",
+        opts: [
+          "Es un triángulo plano",
+          "Los otros dos miden 0° y no forma triángulo real",
+          "Es un triángulo muy obtuso",
+          "Es posible si los lados son largos"
+        ],
+        ans: 1, exp: "Si un ángulo mide 180°, los otros suman 0°, los puntos son colineales y NO forman un triángulo."
+      }
+    ])
+  },
+  {
+    id: 2, name: "Clasificación por Lados", icon: "📏",
+    desc: "Equilátero, isósceles y escaleno",
+    color: "rgba(78,205,196,0.08)", shadow: "rgba(78,205,196,0.3)",
+    border: "rgba(78,205,196,0.5)", solid: "#4ecdc4",
+    questions: shuffle([
+      {
+        q: "¿Cómo se llama un triángulo con los 3 lados iguales?",
+        opts: ["Isósceles", "Escaleno", "Equilátero", "Rectángulo"],
+        ans: 2, exp: "El triángulo EQUILÁTERO tiene sus 3 lados iguales y sus 3 ángulos iguales (60° cada uno)."
+      },
+      {
+        q: "Un triángulo tiene lados de 5 cm, 5 cm y 8 cm. ¿Cómo se clasifica por sus lados?",
+        opts: ["Equilátero", "Isósceles", "Escaleno", "Rectángulo"],
+        ans: 1, exp: "ISÓSCELES: tiene exactamente 2 lados iguales (5 cm y 5 cm)."
+      },
+      {
+        q: "Un triángulo con lados de 3 cm, 5 cm y 7 cm se llama:",
+        opts: ["Equilátero", "Isósceles", "Escaleno", "Acutángulo"],
+        ans: 2, exp: "ESCALENO: todos sus lados son diferentes (3 ≠ 5 ≠ 7)."
+      },
+      {
+        q: "¿Cuántos lados iguales tiene un triángulo equilátero?",
+        opts: ["0 lados iguales", "1 lado igual", "2 lados iguales", "3 lados iguales"],
+        ans: 3, exp: "El equilátero tiene sus 3 lados iguales, de ahí su nombre (equi=igual, látero=lado)."
+      },
+      {
+        q: "¿Qué caracteriza a un triángulo isósceles?",
+        opts: [
+          "Los 3 lados son diferentes",
+          "Los 3 lados son iguales",
+          "Exactamente 2 lados son iguales",
+          "Tiene un ángulo de 90°"
+        ],
+        ans: 2, exp: "El ISÓSCELES tiene exactamente 2 lados iguales (llamados piernas) y una base diferente."
+      },
+      {
+        q: "Si un triángulo equilátero tiene un lado de 6 cm, ¿cuánto miden los otros lados?",
+        opts: ["3 cm y 9 cm", "6 cm y 6 cm", "12 cm y 0 cm", "Pueden variar"],
+        ans: 1, exp: "Al ser equilátero, los 3 lados son iguales: todos miden 6 cm."
+      },
+      {
+        q: "¿Cuántos tipos de triángulo existen según sus lados?",
+        opts: ["2 tipos", "3 tipos", "4 tipos", "5 tipos"],
+        ans: 1, exp: "Hay 3 tipos: Equilátero (3 iguales), Isósceles (2 iguales) y Escaleno (todos diferentes)."
+      },
+      {
+        q: "Un triángulo isósceles tiene ángulos de 40° en la base. ¿Cuánto mide el ángulo del vértice?",
+        opts: ["40°", "80°", "100°", "120°"],
+        ans: 2, exp: "Los ángulos de la base son iguales (40° + 40° = 80°), entonces el vértice = 180° − 80° = 100°."
+      },
+      {
+        q: "¿Qué tipo de triángulo tiene todos sus ángulos distintos?",
+        opts: ["Equilátero", "Isósceles", "Escaleno", "Rectángulo"],
+        ans: 2, exp: "El ESCALENO tiene todos sus lados y ángulos diferentes entre sí."
+      },
+      {
+        q: "¿Un triángulo equilátero puede ser isósceles también?",
+        opts: [
+          "No, son tipos completamente distintos",
+          "Sí, porque también tiene al menos 2 lados iguales",
+          "Solo si mide más de 10 cm",
+          "Solo en geometría avanzada"
+        ],
+        ans: 1, exp: "¡Sí! El equilátero cumple la condición del isósceles (2 lados iguales), pero es aún más especial."
+      },
+      {
+        q: "Triángulo con lados 7 cm, 7 cm y 7 cm. ¿Cómo se clasifica?",
+        opts: ["Isósceles", "Escaleno", "Equilátero", "Acutángulo"],
+        ans: 2, exp: "Al tener los 3 lados iguales es EQUILÁTERO. Además, sus 3 ángulos miden 60°."
+      },
+      {
+        q: "¿Cuántos lados iguales tiene un triángulo escaleno?",
+        opts: ["3 lados iguales", "2 lados iguales", "1 lado igual", "Ningún lado igual"],
+        ans: 3, exp: "El ESCALENO tiene todos sus lados diferentes: ningún par de lados tiene la misma medida."
+      }
+    ])
+  },
+  {
+    id: 3, name: "Clasificación por Ángulos", icon: "📐",
+    desc: "Acutángulo, rectángulo y obtusángulo",
+    color: "rgba(255,107,107,0.08)", shadow: "rgba(255,107,107,0.3)",
+    border: "rgba(255,107,107,0.5)", solid: "#ff6b6b",
+    questions: shuffle([
+      {
+        q: "¿Cómo se llama el triángulo que tiene un ángulo de exactamente 90°?",
+        opts: ["Acutángulo", "Rectángulo", "Obtusángulo", "Equilátero"],
+        ans: 1, exp: "El triángulo RECTÁNGULO tiene un ángulo recto (90°). Los otros dos suman 90° entre sí."
+      },
+      {
+        q: "Un triángulo con ángulos de 60°, 70° y 50°. ¿Cómo se clasifica por ángulos?",
+        opts: ["Rectángulo", "Obtusángulo", "Acutángulo", "Isósceles"],
+        ans: 2, exp: "ACUTÁNGULO: los 3 ángulos son agudos (menores a 90°). Aquí 60°, 70° y 50° son todos < 90°."
+      },
+      {
+        q: "¿Qué tipo de triángulo tiene un ángulo mayor a 90°?",
+        opts: ["Acutángulo", "Rectángulo", "Obtusángulo", "Equilátero"],
+        ans: 2, exp: "El OBTUSÁNGULO tiene un ángulo obtuso (mayor a 90° y menor a 180°)."
+      },
+      {
+        q: "Un triángulo tiene ángulos de 120°, 30° y 30°. ¿Cómo se llama?",
+        opts: ["Acutángulo", "Rectángulo", "Obtusángulo", "Escaleno"],
+        ans: 2, exp: "OBTUSÁNGULO porque el ángulo de 120° es mayor a 90°. Solo puede haber un ángulo obtuso por triángulo."
+      },
+      {
+        q: "¿Cuántos ángulos obtusos puede tener un triángulo?",
+        opts: ["Ninguno", "Solo 1", "Exactamente 2", "Hasta 3"],
+        ans: 1, exp: "Solo puede tener UN ángulo obtuso, porque si hubiera dos, la suma ya superaría los 180°."
+      },
+      {
+        q: "El triángulo con ángulos de 45°, 45° y 90° se clasifica como:",
+        opts: ["Acutángulo", "Rectángulo", "Obtusángulo", "Equilátero"],
+        ans: 1, exp: "RECTÁNGULO porque tiene exactamente un ángulo de 90°. Además es isósceles (dos ángulos iguales de 45°)."
+      },
+      {
+        q: "¿Puede un triángulo equilátero ser rectángulo?",
+        opts: [
+          "Sí, si un lado es más largo",
+          "No, porque sus ángulos miden 60° (ninguno es 90°)",
+          "Sí, en geometría especial",
+          "Solo si tiene un vértice en 0°"
+        ],
+        ans: 1, exp: "No. El equilátero tiene sus 3 ángulos iguales a 60°. Ninguno es 90°, así que no puede ser rectángulo."
+      },
+      {
+        q: "¿Cuántos ángulos rectos puede tener un triángulo?",
+        opts: ["Ninguno", "Solo 1", "Exactamente 2", "Hasta 3"],
+        ans: 1, exp: "Solo puede tener UN ángulo de 90°. Dos ángulos rectos sumarían 180°, sin dejar nada para el tercero."
+      },
+      {
+        q: "Triángulo con ángulos 80°, 60° y 40°. ¿Cómo se clasifica?",
+        opts: ["Obtusángulo", "Rectángulo", "Acutángulo", "Isósceles"],
+        ans: 2, exp: "ACUTÁNGULO: todos sus ángulos (80°, 60°, 40°) son menores a 90°."
+      },
+      {
+        q: "¿Qué tipo de ángulos tienen TODOS los triángulos acutángulos?",
+        opts: [
+          "Al menos un ángulo de 90°",
+          "Todos los ángulos menores a 90°",
+          "Al menos un ángulo mayor a 90°",
+          "Un ángulo igual a 180°"
+        ],
+        ans: 1, exp: "En un ACUTÁNGULO todos los ángulos son agudos (menores a 90°). De ahí su nombre."
+      },
+      {
+        q: "Un triángulo rectángulo tiene ángulos de 90° y 35°. ¿Cuánto mide el tercer ángulo?",
+        opts: ["35°", "45°", "55°", "65°"],
+        ans: 2, exp: "180° − 90° − 35° = 55°. Los dos ángulos agudos del triángulo rectángulo suman 90°."
+      },
+      {
+        q: "¿Cuál de estos conjuntos de ángulos corresponde a un triángulo obtusángulo?",
+        opts: ["60°, 60°, 60°", "90°, 45°, 45°", "110°, 40°, 30°", "80°, 60°, 40°"],
+        ans: 2, exp: "110°, 40°, 30° → el ángulo de 110° es obtuso (>90°), por eso es OBTUSÁNGULO. Verifica: 110+40+30=180 ✓"
+      }
+    ])
+  },
+  {
+    id: 4, name: "¡Desafío Final!", icon: "🏆",
+    desc: "Todo combinado: lados, ángulos y propiedades",
+    color: "rgba(167,139,250,0.08)", shadow: "rgba(167,139,250,0.3)",
+    border: "rgba(167,139,250,0.5)", solid: "#a78bfa",
+    questions: shuffle([
+      {
+        q: "Un triángulo con lados iguales y ángulos de 60° se clasifica como:",
+        opts: ["Isósceles y acutángulo", "Equilátero y acutángulo", "Escaleno y obtusángulo", "Equilátero y rectángulo"],
+        ans: 1, exp: "EQUILÁTERO (3 lados iguales) y ACUTÁNGULO (todos los ángulos menores a 90°, exactamente 60°)."
+      },
+      {
+        q: "¿Cómo se clasifica un triángulo con ángulos 90°, 45°, 45° y dos lados iguales?",
+        opts: [
+          "Equilátero y rectángulo",
+          "Isósceles y rectángulo",
+          "Escaleno y acutángulo",
+          "Isósceles y obtusángulo"
+        ],
+        ans: 1, exp: "ISÓSCELES (2 lados iguales, ángulos de base iguales: 45°) y RECTÁNGULO (tiene un ángulo de 90°)."
+      },
+      {
+        q: "¿Puede un triángulo ser escaleno y rectángulo a la vez?",
+        opts: [
+          "No, son conceptos opuestos",
+          "Sí, como el triángulo 3-4-5",
+          "Solo si los lados son enteros",
+          "No, el rectángulo siempre es isósceles"
+        ],
+        ans: 1, exp: "¡Sí! El triángulo 3-4-5 es ESCALENO (todos los lados diferentes) y RECTÁNGULO (90° entre los lados 3 y 4)."
+      },
+      {
+        q: "Lados de 5, 12 y 13. Sabiendo que 5²+12²=13², ¿cómo se clasifica?",
+        opts: [
+          "Equilátero y acutángulo",
+          "Isósceles y rectángulo",
+          "Escaleno y rectángulo",
+          "Escaleno y obtusángulo"
+        ],
+        ans: 2, exp: "ESCALENO (5≠12≠13) y RECTÁNGULO (cumple el Teorema de Pitágoras, tiene un ángulo de 90°)."
+      },
+      {
+        q: "¿Cuántos tipos de clasificación simultánea puede tener un triángulo?",
+        opts: [
+          "Solo uno: por lados O por ángulos",
+          "Dos: uno por lados y uno por ángulos",
+          "Tres como máximo",
+          "No se puede clasificar de dos maneras"
+        ],
+        ans: 1, exp: "Siempre tiene 2 clasificaciones: una por lados (equilátero/isósceles/escaleno) y otra por ángulos."
+      },
+      {
+        q: "¿Puede existir un triángulo equilátero y obtusángulo?",
+        opts: [
+          "Sí, si los lados son muy largos",
+          "No, porque el equilátero tiene ángulos de 60° (todos agudos)",
+          "Sí, en geometría no euclidiana",
+          "Solo si tiene un ángulo de 91°"
+        ],
+        ans: 1, exp: "Imposible. El equilátero siempre tiene ángulos de 60°, todos agudos → siempre es acutángulo."
+      },
+      {
+        q: "Un triángulo isósceles rectángulo tiene un ángulo de 90°. ¿Cuánto miden los otros dos?",
+        opts: ["30° y 60°", "45° y 45°", "60° y 30°", "40° y 50°"],
+        ans: 1, exp: "Los dos ángulos iguales (base del isósceles) suman: 180°−90°=90°, dividido entre 2 = 45° cada uno."
+      },
+      {
+        q: "Ángulos de 120°, 30° y 30°. Dos lados iguales. ¿Clasificación completa?",
+        opts: [
+          "Escaleno y acutángulo",
+          "Isósceles y obtusángulo",
+          "Equilátero y acutángulo",
+          "Isósceles y rectángulo"
+        ],
+        ans: 1, exp: "ISÓSCELES (dos ángulos iguales de 30°, dos lados iguales) y OBTUSÁNGULO (120° > 90°)."
+      },
+      {
+        q: "¿Cuál afirmación es FALSA sobre los triángulos?",
+        opts: [
+          "Un equilátero es siempre acutángulo",
+          "Un escaleno puede ser rectángulo",
+          "Un triángulo puede tener dos ángulos obtusos",
+          "Un isósceles puede ser acutángulo"
+        ],
+        ans: 2, exp: "FALSA: no puede haber dos ángulos obtusos. Dos ángulos > 90° sumarían más de 180°, imposible."
+      },
+      {
+        q: "Los lados 6, 8 y 10 forman un triángulo. ¿Se cumple la desigualdad triangular?",
+        opts: [
+          "No, porque 6+8 no es mayor que 10",
+          "Sí, 6+8=14>10; 6+10=16>8; 8+10=18>6",
+          "Solo si hay un ángulo recto",
+          "No se puede determinar"
+        ],
+        ans: 1, exp: "Sí: 6+8=14>10 ✓, 6+10=16>8 ✓, 8+10=18>6 ✓. Además 6²+8²=100=10², ¡es rectángulo!"
+      },
+      {
+        q: "Clasifica completamente: triángulo con lados 7, 7, 7 cm.",
+        opts: [
+          "Isósceles y acutángulo",
+          "Equilátero y acutángulo",
+          "Isósceles y rectángulo",
+          "Escaleno y acutángulo"
+        ],
+        ans: 1, exp: "EQUILÁTERO (los 3 lados iguales = 7 cm) y ACUTÁNGULO (sus 3 ángulos son 60°, todos < 90°)."
+      },
+      {
+        q: "¿Cuál de estos NO puede ser una clasificación válida de un triángulo?",
+        opts: [
+          "Isósceles y acutángulo",
+          "Escaleno y obtusángulo",
+          "Equilátero y rectángulo",
+          "Isósceles y rectángulo"
+        ],
+        ans: 2, exp: "Equilátero y rectángulo es IMPOSIBLE: el equilátero tiene 3 ángulos de 60°, ninguno es 90°."
+      }
+    ])
+  }
+];
+
+// Pick 8 questions per world
+function getWorldQuestions(world) {
+  return shuffle([...world.questions]).slice(0, 8);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ==================== GAME STATE ====================
+let state = {
+  playerName: '',
+  currentWorld: 0,
+  worldUnlocked: [true, false, false, false],
+  worldCompleted: [false, false, false, false],
+  worldScores: [0, 0, 0, 0],
+  worldCorrect: [0, 0, 0, 0],
+  worldWrong: [0, 0, 0, 0],
+  worldStars: [0, 0, 0, 0],
+  // Current session
+  lives: 3,
+  score: 0,
+  questionIndex: 0,
+  questions: [],
+  correctCount: 0,
+  wrongCount: 0,
+  answered: false,
+  timerInterval: null,
+  timerSeconds: 60,
+};
+
+// ==================== SCREENS ====================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('screen-' + id).classList.remove('hidden');
+}
+
+// ==================== START ====================
+function startGame() {
+  const name = document.getElementById('player-name').value.trim();
+  if (!name) {
+    document.getElementById('player-name').style.borderColor = 'var(--accent2)';
+    document.getElementById('player-name').placeholder = '¡Debes ingresar tu nombre!';
+    return;
+  }
+  state.playerName = name;
+  goToMap();
+}
+
+function goToMap() {
+  clearTimer();
+  renderMap();
+  showScreen('map');
+}
+
+function renderMap() {
+  document.getElementById('map-player-name').textContent = state.playerName;
+  const total = state.worldScores.reduce((a, b) => a + b, 0);
+  document.getElementById('map-total-score').textContent = total;
+
+  const grid = document.getElementById('worlds-grid');
+  grid.innerHTML = '';
+
+  WORLDS.forEach((w, i) => {
+    const card = document.createElement('div');
+    card.className = 'world-card ' + (state.worldUnlocked[i] ? 'unlocked' : 'locked') + (state.worldCompleted[i] ? ' completed' : '');
+    card.style.setProperty('--world-color', w.color);
+    card.style.setProperty('--world-shadow', w.shadow);
+    card.style.setProperty('--world-border', w.border);
+
+    const stars = state.worldStars[i] ? '⭐'.repeat(state.worldStars[i]) + '☆'.repeat(3 - state.worldStars[i]) : '☆☆☆';
+    if (state.worldUnlocked[i]) {
+      card.onclick = () => startWorld(i);
+      card.innerHTML = `
+        <span class="world-icon">${w.icon}</span>
+        <div class="world-num">Mundo ${w.id}</div>
+        <div class="world-name" style="color:${w.solid}">${w.name}</div>
+        <div class="world-desc">${w.desc}</div>
+        <div class="world-stars">${stars}</div>
+        ${state.worldCompleted[i] ? '<div style="font-size:0.75rem;color:var(--green);margin-top:6px;">✅ Completado ('+state.worldScores[i]+' pts)</div>' : ''}
+      `;
+    } else {
+      card.innerHTML = `
+        <span class="lock-icon">🔒</span>
+        <div class="world-num">Mundo ${w.id}</div>
+        <div class="world-name">${w.name}</div>
+        <div class="world-desc">Completa el mundo anterior para desbloquear</div>
+      `;
+    }
+    grid.appendChild(card);
+  });
+
+  // Progress dots
+  const prog = document.getElementById('map-progress');
+  prog.innerHTML = '';
+  WORLDS.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'wp-dot' + (state.worldCompleted[i] ? ' done' : (state.worldUnlocked[i] && !state.worldCompleted[i] ? ' active' : ''));
+    prog.appendChild(dot);
+  });
+}
+
+// ==================== START WORLD ====================
+function startWorld(worldIndex) {
+  state.currentWorld = worldIndex;
+  state.lives = 3;
+  state.score = 0;
+  state.questionIndex = 0;
+  state.correctCount = 0;
+  state.wrongCount = 0;
+  state.questions = getWorldQuestions(WORLDS[worldIndex]);
+
+  const w = WORLDS[worldIndex];
+  document.getElementById('game-world-badge').textContent = `${w.icon} Mundo ${w.id}: ${w.name}`;
+  document.getElementById('game-world-badge').style.background = w.solid;
+  document.getElementById('game-world-badge').style.color = '#111';
+
+  showScreen('game');
+  renderQuestion();
+}
+
+function retryWorld() {
+  startWorld(state.currentWorld);
+}
+
+// ==================== RENDER QUESTION ====================
+function renderQuestion() {
+  clearTimer();
+  state.answered = false;
+
+  const q = state.questions[state.questionIndex];
+  document.getElementById('game-q-counter').textContent = `Pregunta ${state.questionIndex + 1}/8`;
+  document.getElementById('game-score').textContent = state.score;
+  document.getElementById('feedback-area').innerHTML = '';
+  document.getElementById('next-btn-area').innerHTML = '';
+
+  // Lives
+  const livesBar = document.getElementById('lives-bar');
+  livesBar.innerHTML = '<span class="lives-label">❤️ Vidas:</span>';
+  for (let i = 0; i < 3; i++) {
+    const heart = document.createElement('span');
+    heart.className = 'heart' + (i >= state.lives ? ' lost' : '');
+    heart.textContent = i < state.lives ? '❤️' : '🖤';
+    livesBar.appendChild(heart);
+  }
+
+  // Question
+  document.getElementById('question-text').textContent = q.q;
+  document.getElementById('question-svg').innerHTML = '';
+
+  // Options
+  const grid = document.getElementById('options-grid');
+  grid.innerHTML = '';
+  const letters = ['A', 'B', 'C', 'D'];
+  q.opts.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<strong>${letters[idx]})</strong> ${opt}`;
+    btn.onclick = () => selectAnswer(idx);
+    grid.appendChild(btn);
+  });
+
+  // Animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight;
+  card.style.animation = 'slideIn 0.4s ease-out';
+
+  startTimer();
+}
+
+// ==================== TIMER ====================
+function startTimer() {
+  state.timerSeconds = 60;
+  updateTimerUI();
+
+  state.timerInterval = setInterval(() => {
+    state.timerSeconds--;
+    updateTimerUI();
+
+    if (state.timerSeconds <= 0) {
+      clearTimer();
+      if (!state.answered) timeOut();
+    }
+  }, 1000);
+}
+
+function updateTimerUI() {
+  const pct = (state.timerSeconds / 60) * 100;
+  const bar = document.getElementById('timer-bar');
+  const txt = document.getElementById('timer-text');
+  bar.style.width = pct + '%';
+
+  if (state.timerSeconds <= 15) {
+    bar.classList.add('warning');
+    txt.classList.add('warning');
+    txt.textContent = `⏱ ¡${state.timerSeconds}s!`;
+  } else {
+    bar.classList.remove('warning');
+    txt.classList.remove('warning');
+    txt.textContent = `⏱ ${state.timerSeconds}s`;
+  }
+}
+
+function clearTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+function timeOut() {
+  state.answered = true;
+  const q = state.questions[state.questionIndex];
+
+  // Show correct answer
+  const btns = document.querySelectorAll('.option-btn');
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('correct');
+  });
+
+  showFeedback(false, '⏰ ¡Se acabó el tiempo!', q.exp);
+  loseLife();
+}
+
+// ==================== ANSWER ====================
+function selectAnswer(idx) {
+  if (state.answered) return;
+  state.answered = true;
+  clearTimer();
+
+  const q = state.questions[state.questionIndex];
+  const btns = document.querySelectorAll('.option-btn');
+
+  btns.forEach((b, i) => {
+    b.disabled = true;
+    if (i === q.ans) b.classList.add('correct');
+    else if (i === idx && idx !== q.ans) b.classList.add('wrong');
+  });
+
+  if (idx === q.ans) {
+    // Correct
+    state.correctCount++;
+    const points = 100 + Math.floor(state.timerSeconds * 1.5);
+    state.score += points;
+    document.getElementById('game-score').textContent = state.score;
+    showFeedback(true, `✅ ¡Correcto! +${points} pts`, q.exp);
+    showNextBtn();
+  } else {
+    // Wrong
+    state.wrongCount++;
+    showFeedback(false, '❌ Incorrecto', q.exp);
+    loseLife();
+  }
+}
+
+function loseLife() {
+  state.lives--;
+
+  // Update hearts
+  const hearts = document.querySelectorAll('.heart');
+  hearts.forEach((h, i) => {
+    if (i >= state.lives) {
+      h.classList.add('lost');
+      h.textContent = '🖤';
+    }
+  });
+
+  if (state.lives <= 0) {
+    setTimeout(() => { showScreen('gameover'); }, 1800);
+  } else {
+    showNextBtn();
+  }
+}
+
+function showFeedback(correct, msg, exp) {
+  const area = document.getElementById('feedback-area');
+  area.innerHTML = `
+    <div class="feedback-msg ${correct ? 'correct-fb' : 'wrong-fb'}">${msg}</div>
+    <div class="explanation">💡 ${exp}</div>
+  `;
+}
+
+function showNextBtn() {
+  const area = document.getElementById('next-btn-area');
+  const isLast = state.questionIndex >= 7;
+  area.innerHTML = `<button class="btn btn-secondary" onclick="nextQuestion()">${isLast ? '🏁 Ver Resultados' : 'Siguiente Pregunta ➡️'}</button>`;
+}
+
+// ==================== NEXT ====================
+function nextQuestion() {
+  state.questionIndex++;
+  if (state.questionIndex >= 8) {
+    finishWorld();
+  } else {
+    renderQuestion();
+  }
+}
+
+// ==================== FINISH WORLD ====================
+function finishWorld() {
+  clearTimer();
+  const w = state.currentWorld;
+  const correct = state.correctCount;
+  const wrong = state.wrongCount;
+  const pct = Math.round((correct / 8) * 100);
+
+  // Stars
+  let stars = 1;
+  if (pct >= 75) stars = 2;
+  if (pct >= 90) stars = 3;
+
+  // Save
+  state.worldCompleted[w] = true;
+  state.worldScores[w] = state.score;
+  state.worldCorrect[w] = correct;
+  state.worldWrong[w] = wrong;
+  state.worldStars[w] = stars;
+
+  // Unlock next
+  if (w < 3) state.worldUnlocked[w + 1] = true;
+
+  // Show screen
+  document.getElementById('wc-correct').textContent = correct;
+  document.getElementById('wc-wrong').textContent = wrong;
+  document.getElementById('wc-score').textContent = state.score;
+  document.getElementById('wc-pct').textContent = pct + '%';
+  document.getElementById('wc-stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('wc-icon').textContent = pct >= 75 ? '🎉' : '💪';
+  document.getElementById('wc-title').textContent = pct >= 75 ? '¡Mundo Completado!' : '¡Mundo Superado!';
+  document.getElementById('wc-msg').textContent = pct >= 75
+    ? `¡Excelente trabajo, ${state.playerName}! Dominaste este mundo. ${w < 3 ? '¡Próximo mundo desbloqueado!' : '¡Completaste todos los mundos!'}`
+    : `¡Lo lograste, ${state.playerName}! Puedes mejorar tu puntuación volviendo a intentarlo.`;
+
+  const nextBtn = document.getElementById('wc-next-btn');
+  if (w === 3) {
+    nextBtn.textContent = '🏆 Ver Resultados Finales';
+    nextBtn.onclick = showFinalScreen;
+  } else {
+    nextBtn.textContent = 'Continuar 🗺️';
+    nextBtn.onclick = goToMap;
+  }
+
+  launchConfetti();
+  showScreen('world-complete');
+}
+
+// ==================== FINAL ====================
+function showFinalScreen() {
+  const totalCorrect = state.worldCorrect.reduce((a, b) => a + b, 0);
+  const totalQ = 32;
+  const pct = Math.round((totalCorrect / totalQ) * 100);
+  const totalScore = state.worldScores.reduce((a, b) => a + b, 0);
+
+  document.getElementById('final-name').textContent = state.playerName;
+
+  // Ring animation
+  setTimeout(() => {
+    const circumference = 2 * Math.PI * 58;
+    const offset = circumference - (pct / 100) * circumference;
+    document.getElementById('ring-circle').style.strokeDashoffset = offset;
+    document.getElementById('ring-pct').textContent = pct + '%';
+  }, 400);
+
+  // Stats
+  const statsGrid = document.getElementById('final-stats');
+  statsGrid.innerHTML = `
+    <div class="fstat"><span class="fstat-num" style="color:var(--accent1)">${totalScore}</span><span class="fstat-lbl">Puntaje Total</span></div>
+    <div class="fstat"><span class="fstat-num" style="color:var(--green)">${totalCorrect}</span><span class="fstat-lbl">Respuestas Correctas</span></div>
+    <div class="fstat"><span class="fstat-num" style="color:var(--accent2)">${totalQ - totalCorrect}</span><span class="fstat-lbl">Incorrectas</span></div>
+    <div class="fstat"><span class="fstat-num" style="color:var(--accent4)">${state.worldStars.reduce((a,b)=>a+b,0)}/12</span><span class="fstat-lbl">Estrellas</span></div>
+  `;
+
+  // Rank
+  let rank, rankColor, certMsg;
+  if (pct >= 90) {
+    rank = '🌟 ¡Maestro de los Triángulos!';
+    rankColor = 'background:linear-gradient(135deg,#f7c948,#ff9900);color:#111;';
+    certMsg = `El/la estudiante ${state.playerName} ha demostrado un dominio excepcional del tema de triángulos, obteniendo un ${pct}% de aciertos. ¡Felicitaciones!`;
+  } else if (pct >= 75) {
+    rank = '🥇 ¡Experto en Triángulos!';
+    rankColor = 'background:linear-gradient(135deg,#6ee7b7,#059669);color:#001;';
+    certMsg = `${state.playerName} ha completado exitosamente el juego con un ${pct}% de aciertos. ¡Muy bien!`;
+  } else if (pct >= 60) {
+    rank = '🥈 ¡Triángulo Intermedio!';
+    rankColor = 'background:linear-gradient(135deg,#a78bfa,#7c3aed);color:#fff;';
+    certMsg = `${state.playerName} completó el juego con un ${pct}% de aciertos. ¡Sigue practicando para mejorar!`;
+  } else {
+    rank = '🥉 ¡Aprendiz de Triángulos!';
+    rankColor = 'background:linear-gradient(135deg,#60a5fa,#2563eb);color:#fff;';
+    certMsg = `${state.playerName} completó el recorrido con ${pct}% de aciertos. ¡La práctica hace al maestro!`;
+  }
+
+  document.getElementById('rank-badge').setAttribute('style', rankColor);
+  document.getElementById('rank-badge').textContent = rank;
+  document.getElementById('cert-msg').textContent = certMsg;
+
+  launchConfetti(80);
+  showScreen('final');
+}
+
+// ==================== CONFETTI ====================
+function launchConfetti(count = 50) {
+  const container = document.getElementById('confetti-container');
+  const colors = ['#f7c948', '#ff6b6b', '#4ecdc4', '#a78bfa', '#6ee7b7', '#60a5fa'];
+
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const left = Math.random() * 100;
+      const size = 6 + Math.random() * 10;
+      const duration = 2 + Math.random() * 3;
+      const delay = Math.random() * 0.5;
+      const shape = Math.random() > 0.5 ? '50%' : '0%';
+
+      piece.style.cssText = `
+        left: ${left}vw; top: -20px;
+        width: ${size}px; height: ${size}px;
+        background: ${color};
+        border-radius: ${shape};
+        animation-duration: ${duration}s;
+        animation-delay: ${delay}s;
+      `;
+      container.appendChild(piece);
+      setTimeout(() => piece.remove(), (duration + delay) * 1000 + 500);
+    }, i * 30);
+  }
+}
+
+// ==================== RESTART ====================
+function restartGame() {
+  state = {
+    playerName: state.playerName,
+    currentWorld: 0,
+    worldUnlocked: [true, false, false, false],
+    worldCompleted: [false, false, false, false],
+    worldScores: [0, 0, 0, 0],
+    worldCorrect: [0, 0, 0, 0],
+    worldWrong: [0, 0, 0, 0],
+    worldStars: [0, 0, 0, 0],
+    lives: 3, score: 0, questionIndex: 0, questions: [],
+    correctCount: 0, wrongCount: 0, answered: false,
+    timerInterval: null, timerSeconds: 60,
+  };
+  WORLDS.forEach(w => { w.questions = shuffle(w.questions); });
+  goToMap();
+}
+
+// ==================== PRINT ====================
+function printCert() {
+  const totalCorrect = state.worldCorrect.reduce((a,b)=>a+b,0);
+  const pct = Math.round((totalCorrect / 32) * 100);
+  const totalScore = state.worldScores.reduce((a,b)=>a+b,0);
+  const today = new Date().toLocaleDateString('es-CO', {year:'numeric',month:'long',day:'numeric'});
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Certificado – ${state.playerName}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      body{font-family:'Nunito',sans-serif;background:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;}
+      .cert{border:6px solid #f7c948;border-radius:24px;padding:48px 56px;max-width:680px;text-align:center;background:#fff;box-shadow:0 0 40px rgba(0,0,0,0.1);}
+      h1{font-family:'Fredoka One';font-size:2.4rem;color:#f9a825;margin:0 0 8px;}
+      .sub{font-size:1rem;color:#888;margin-bottom:24px;}
+      .name{font-family:'Fredoka One';font-size:2.8rem;color:#333;border-bottom:3px solid #f7c948;display:inline-block;padding-bottom:8px;margin:16px 0;}
+      .info{font-size:1.05rem;color:#555;margin:8px 0;}
+      .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:24px 0;}
+      .s{background:#f9f3e3;border-radius:12px;padding:14px;}
+      .sn{font-family:'Fredoka One';font-size:1.8rem;color:#f9a825;}
+      .sl{font-size:0.8rem;color:#888;}
+      .footer{font-size:0.85rem;color:#aaa;margin-top:24px;}
+      .signature{margin-top:32px;border-top:1px solid #ddd;padding-top:16px;}
+    </style></head><body><div class="cert">
+    <div style="font-size:3rem;margin-bottom:8px;">🏆</div>
+    <h1>Certificado de Logro</h1>
+    <p class="sub">TriangleMaster – Aventura Geométrica</p>
+    <p class="info">Se certifica que el/la estudiante</p>
+    <div class="name">${state.playerName}</div>
+    <p class="info">completó exitosamente los <strong>4 mundos</strong> del juego educativo sobre triángulos.</p>
+    <div class="stats">
+      <div class="s"><div class="sn">${pct}%</div><div class="sl">Índice de aciertos</div></div>
+      <div class="s"><div class="sn">${totalCorrect}/32</div><div class="sl">Respuestas correctas</div></div>
+      <div class="s"><div class="sn">${totalScore}</div><div class="sl">Puntaje total</div></div>
+    </div>
+    <p class="info">Temas dominados: conceptos básicos, clasificación por lados y clasificación por ángulos.</p>
+    <div class="signature">
+      <p><strong>Prof. Andrés Jiménez</strong><br><span style="color:#888;font-size:0.9rem;">Licenciatura en Matemáticas</span></p>
+      <p style="font-size:0.85rem;color:#aaa;margin-top:8px;">${today}</p>
+    </div>
+    </div></body></html>`);
+  win.document.close();
+  win.print();
+}
+</script>
+</body>
+</html>
